@@ -1,0 +1,32 @@
+# Central complex (T2 atlas + FlyWire CX connectome).
+# Paper Fig 1: test r 0.815 (10 folds x 5 seeds).
+# Reference runs: cm_central_complex/kfold_best_mc1/typesplit_k10_f*/h2000_uniform_s*.
+dataset: cx
+seeds: [0, 1, 2, 3, 4]
+seed_offset: 0
+threads: 4
+
+split:
+  k: 10
+  seed: 0                 # strata: named / unnamed types
+
+genes:
+  # Bundle holds exactly the solver genes: top 2,000 by per-batch dispersion
+  # (5_dispersion_binned_batch, no min-cells filter). All splits use all of them.
+  select: all
+  batch_normalize:        # per-gene detection reweighted by global / batch rate
+    pseudo: 10
+    cap: 5
+
+metacell:
+  min_samples_prior: 10
+
+solver:
+  num_iter: 100
+  lambda_sparsity: 0.001
+  optimal_transport_epsilon: 1.0e-12
+  optimal_transport_step: 0.04
+  optimal_transport_iterations: 50
+  regression_iterations: 50
+  time_limit_per_step: 60
+  use_complement: false

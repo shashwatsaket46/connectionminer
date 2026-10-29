@@ -1,0 +1,18 @@
+# conda env create -f environment.yml && conda activate connectionminer
+# Versions are the ones the paper's runs used (Python 3.13, PyTorch 2.13 / CUDA 13).
+name: connectionminer
+channels:
+  - conda-forge
+dependencies:
+  - python=3.13
+  - numpy=2.4
+  - scipy=1.18
+  - pandas=3.0
+  - pyyaml
+  - pytest
+  - pip
+  - pip:
+      # CUDA 13 wheels; on a CPU-only machine plain `torch==2.13.0` works too.
+      - --extra-index-url https://download.pytorch.org/whl/cu130
+      - torch==2.13.0
+      - -e .

@@ -1,0 +1,29 @@
+# Adult motor system (VNC premotor + adult motor neurons, MN timepoint 3).
+# Paper Fig 1: test r 0.375 (10 folds x 5 seeds).
+# Reference runs: cm_active/devstages/motor/tp3/typesplit_k10_f*/h1000_uniform_s*.
+dataset: motor
+seeds: [0, 1, 2, 3, 4]
+seed_offset: 750          # solver seed = 750 + seed
+threads: 4
+
+split:
+  k: 10
+  seed: 0                 # strata: named/unnamed x preMN/MN
+
+genes:
+  # Bundle holds exactly the solver genes: top 1,000 by dispersion_binned
+  # (scored once on all tp3 cells). All splits use all of them.
+  select: all
+
+metacell:
+  min_samples_prior: 10
+
+solver:
+  num_iter: 100
+  lambda_sparsity: 0.001
+  optimal_transport_epsilon: 1.0e-12
+  optimal_transport_step: 0.04
+  optimal_transport_iterations: 50
+  regression_iterations: 50
+  time_limit_per_step: 60
+  use_complement: true    # gene non-detection (1 - G) enters as extra features

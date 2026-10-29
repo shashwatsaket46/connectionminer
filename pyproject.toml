@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "connectionminer"
+version = "1.0.0"
+description = "Joint inference of cell types and gene-gene wiring rules from single-cell expression and the connectome"
+requires-python = ">=3.10"
+dependencies = ["numpy", "scipy", "pandas", "pyyaml", "torch"]
+
+[project.optional-dependencies]
+prepare = ["anndata"]      # only prepare/export_bundle.py (visual) needs it
+test = ["pytest"]
+
+[project.scripts]
+connectionminer = "connectionminer.cli:main"
+
+[tool.setuptools]
+packages = ["connectionminer"]

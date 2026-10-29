@@ -1,0 +1,31 @@
+# Adult visual system (optic lobe). Paper Fig 1: test r 0.601 (10 folds x 5 seeds).
+# Reference runs: cm_active/devstages/Adult/typesplit_k10_f*_nofilt/h3000_uniform_s*.
+dataset: visual
+seeds: [0, 1, 2, 3, 4]
+seed_offset: 0            # solver seed = seed_offset + seed
+threads: 4
+
+split:
+  k: 10                   # fold f = test, f+1 = val, rest = train
+  seed: 0                 # strata: named / unnamed types
+
+genes:
+  # Bundle holds the 3,000 dispersion_binned HVGs. Train keeps those detected in
+  # >= 1 train cell ("nofilt"), ordered by detection variance mu*(1-mu);
+  # val/test reuse train's genes.
+  select: binary_variance
+  n_top: 3000
+  min_cells: 1
+
+metacell:
+  min_samples_prior: 10   # metacells < 10 cells shrunk toward the block mean
+
+solver:
+  num_iter: 100
+  lambda_sparsity: 0.001
+  optimal_transport_epsilon: 1.0e-12
+  optimal_transport_step: 0.04
+  optimal_transport_iterations: 50
+  regression_iterations: 50
+  time_limit_per_step: 60   # seconds; wall-clock cap on each inner loop (never hit on GPU)
+  use_complement: false
