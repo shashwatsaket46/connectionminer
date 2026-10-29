@@ -28,6 +28,7 @@ random streams for beta's initialisation, so the same seed gives a different
 """
 from __future__ import annotations
 
+import functools
 import time
 from dataclasses import dataclass
 
@@ -49,7 +50,7 @@ class SolveResult:
 
 def solve(G_metacell: np.ndarray, P_constraints: np.ndarray, C: np.ndarray, C_mask: np.ndarray,
           cfg: dict, seed: int, beta_fixed: np.ndarray | None = None,
-          device: str = "auto", log=print) -> SolveResult:
+          device: str = "auto", log=functools.partial(print, flush=True)) -> SolveResult:
     """Run one solve. `beta_fixed` switches to the held-out (frozen beta) protocol."""
     dev = torch.device("cuda" if device == "auto" and torch.cuda.is_available()
                        else ("cpu" if device == "auto" else device))
