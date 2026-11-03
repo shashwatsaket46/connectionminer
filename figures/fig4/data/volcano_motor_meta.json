@@ -1,0 +1,12 @@
+{
+ "label": "motor_tp3",
+ "n_genes": 2000,
+ "pairs_with_signal": 210674,
+ "tested": 210674,
+ "bh_q05_up": 12,
+ "bh_q05_down": 0,
+ "min_p": 6.497192543406868e-11,
+ "k_null": 5,
+ "min_folds": 3,
+ "log2": true
+}

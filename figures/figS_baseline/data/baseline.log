@@ -1,0 +1,36 @@
+ res split     rule       arm  r_matched  stored_matched  r_unmatched  stored_unmatched   d
+r0.5   val       cm      real     0.4648          0.4648      -0.0044           -0.0044 0.0
+r0.5   val       cm null rule     0.4404          0.4404       0.0606            0.0606 0.0
+r0.5   val bilinear      real     0.4598          0.4598      -0.0041           -0.0041 0.0
+r0.5   val bilinear null rule     0.3888          0.3888       0.0648            0.0648 0.0
+r0.5  test       cm      real     0.3491          0.3491      -0.0064           -0.0064 0.0
+r0.5  test       cm null rule     0.3618          0.3618       0.0672            0.0672 0.0
+r0.5  test bilinear      real     0.3329          0.3329      -0.0242           -0.0242 0.0
+r0.5  test bilinear null rule     0.2937          0.2937       0.0217            0.0217 0.0
+r1.0   val       cm      real     0.4793          0.4793       0.0074            0.0074 0.0
+r1.0   val       cm null rule     0.4440          0.4440       0.0610            0.0610 0.0
+r1.0   val bilinear      real     0.4641          0.4641       0.0097            0.0097 0.0
+r1.0   val bilinear null rule     0.3985          0.3985       0.0593            0.0593 0.0
+r1.0  test       cm      real     0.3629          0.3629       0.0039            0.0039 0.0
+r1.0  test       cm null rule     0.3803          0.3803       0.0635            0.0635 0.0
+r1.0  test bilinear      real     0.3496          0.3496      -0.0146           -0.0146 0.0
+r1.0  test bilinear null rule     0.2987          0.2987       0.0149            0.0149 0.0
+r2.0   val       cm      real     0.4988          0.4988       0.0459            0.0459 0.0
+r2.0   val       cm null rule     0.4548          0.4548       0.0563            0.0563 0.0
+r2.0   val bilinear      real     0.4990          0.4990       0.0442            0.0442 0.0
+r2.0   val bilinear null rule     0.4005          0.4005       0.0538            0.0538 0.0
+r2.0  test       cm      real     0.3948          0.3948       0.0263            0.0263 0.0
+r2.0  test       cm null rule     0.3833          0.3833       0.0540            0.0540 0.0
+r2.0  test bilinear      real     0.3632          0.3632       0.0065            0.0065 0.0
+r2.0  test bilinear null rule     0.3048          0.3048       0.0089            0.0089 0.0
+r4.0   val       cm      real     0.4880          0.4880       0.0532            0.0532 0.0
+r4.0   val       cm null rule     0.4442          0.4442       0.0532            0.0532 0.0
+r4.0   val bilinear      real     0.4790          0.4790       0.0508            0.0508 0.0
+r4.0   val bilinear null rule     0.4028          0.4028       0.0528            0.0528 0.0
+r4.0  test       cm      real     0.3959          0.3959       0.0286            0.0286 0.0
+r4.0  test       cm null rule     0.3854          0.3854       0.0497            0.0497 0.0
+r4.0  test bilinear      real     0.3723          0.3723       0.0107            0.0107 0.0
+r4.0  test bilinear null rule     0.3059          0.3059       0.0081            0.0081 0.0
+max |recomputed - stored| over all 32 fold-0 rows: 2.84e-16
+chosen res r4.0; cm lambda setting 1e-06 (x s_max^4 = 642.2); inner-split r: 1e-10:0.127, 1e-08:0.175, 1e-06:0.268, 0.0001:0.257, 0.01:0.065
+test r recomputed 0.395887  stored 0.395887; unmatched 0.0286

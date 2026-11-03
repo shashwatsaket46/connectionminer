@@ -200,6 +200,18 @@ Building those directories from the raw atlases and connectomes happens in the
 per-system build pipelines. That covers annotation, metacell clustering and
 gene selection, and it is not part of this repository.
 
+## Figures
+
+`figures/` holds every paper figure (Figs 1–4 and the supplementary figures),
+rendered as SVG/PDF/PNG, together with the scripts and the small pre-extracted
+data that redraw them on any laptop (numpy, scipy, pandas, matplotlib, pillow;
+no solver, no GPU). See [`figures/README.md`](figures/README.md).
+
+```bash
+pip install -r figures/requirements.txt
+python figures/fig1/fig1.py      # -> figures/fig1/out/fig1.{svg,pdf,png}
+```
+
 ## Layout
 
 ```
@@ -213,4 +225,5 @@ configs/         visual.yaml, motor.yaml, cx.yaml: the best settings per system
 prepare/         export_bundle.py (lab builds → bundles), verify_reference.py
 slurm/           run_fold.sbatch
 tests/           synthetic smoke tests
+figures/         paper figures: scripts, pre-extracted data, rendered outputs
 ```

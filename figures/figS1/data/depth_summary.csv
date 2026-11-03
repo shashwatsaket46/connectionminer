@@ -1,0 +1,4 @@
+system,n_cells,n_metacells,n_genes_matrix,median_cells_per_mc,cell_umi_median,mc_umi_median,cell_genes_median,mc_genes_median
+visual,99656,4748,12028,14.0,1866.0,29145.0,933.0,4081.5
+cx,48014,2490,21771,17.0,2085.0,38586.0,827.0,3425.5
+motor,11292,2036,11547,4.0,2598.5,11756.5,1157.0,2799.0
