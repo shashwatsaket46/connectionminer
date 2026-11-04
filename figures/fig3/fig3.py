@@ -207,7 +207,7 @@ for i, k in enumerate(SYS):
         cols.append(next(j for j in np.argsort(-enr) if j not in cols and np.isfinite(enr[j])))
     M = d["PG"][:, cols]; M = np.log2((M + 1e-4) / (M.mean(0, keepdims=True) + 1e-4))
     lim = np.percentile(np.abs(M), 98)
-    hx, hy, hw, hhm = 22, y0 + 5, 34, 44
+    hx, hy, hw, hhm = 19, y0 + 5, 34, 44
     ax = ax_mm(hx, hy, hw, hhm)
     N = np.nan_to_num(d["n_expr"][np.ix_([d["crow"][t] for t in d["top"]], cols)])
     smax = max(N.max(), 1.0)
@@ -223,7 +223,7 @@ for i, k in enumerate(SYS):
                                                ms=np.sqrt(area(v)), mfc="#bbbbbb", mec="#555555", mew=0.15, ls="",
                                                transform=fig.transFigure))
     text_mm(hx + hw + 1.2, hy + 0.6, "cells", fontsize=FS - 0.5)
-    ax.set_yticks(range(len(rows_t)), rows_t, fontsize=FS - 0.5)
+    ax.set_yticks(range(len(rows_t)), [t.removesuffix("_unknown") for t in rows_t], fontsize=FS - 0.5)
     ax.set_xticks(range(len(cols)), d["genes"][cols], rotation=90, fontsize=FS - 1, style="italic")
     ax.tick_params(length=1, pad=0.8)
     for sp_ in ax.spines.values(): sp_.set_visible(True)
@@ -248,7 +248,7 @@ for i, k in enumerate(SYS):
     xy, kind = d["xy"], d["kind"]
     pa, pb = d["pA"], d["pB"]
     w = pa + pb; f = pa / np.maximum(w, 1e-12)
-    ex, ew, eh = XB, 30, 27
+    ex, ew, eh = XB, 27, 23
     core = xy[w >= 0.5 * w.max()]; med = np.median(core, 0); dist = np.abs(core - med).max(1)
     core = core[dist <= np.percentile(dist, 90) * 1.2]                       # the pair's main cluster
     lo, hi = core.min(0), core.max(0)
@@ -268,8 +268,14 @@ for i, k in enumerate(SYS):
     ins.scatter(*xy[w >= 0.5 * w.max()].T, s=0.05, c="black", lw=0, rasterized=True)
     ins.add_patch(Rectangle(c0 - half, *(2 * half), fill=False, ec="black", lw=0.4))
     ins.set_aspect("equal", "datalim")
-    text_mm(ex, by + eh + 0.5, f"{kind} (zoom)", fontsize=FS, color="#666666", va="top")
-    kx = ax_mm(ex + 10.5, by + eh + 3.8, 13, 1.1)                         # A <-> B colour key
+    pts = (xy[inview] - (c0 - half)) / (2 * half)                       # embedding label in the emptiest corner
+    corners = [(0.03, 0.03, "left", "bottom"), (0.97, 0.03, "right", "bottom"), (0.03, 0.97, "left", "top"),
+               (0.97, 0.97, "right", "top")]
+    cx_, cy_, ha_, va_ = min(corners, key=lambda q: ((np.abs(pts[:, 0] - q[0]) < 0.35) &
+                                                       (np.abs(pts[:, 1] - q[1]) < 0.12)).sum())
+    eb.text(cx_, cy_, kind, transform=eb.transAxes, fontsize=FS - 0.5, color="#666666", ha=ha_, va=va_, zorder=5,
+            bbox=dict(fc="white", ec="none", alpha=0.7, pad=0.5))
+    kx = ax_mm(ex + 9, by + eh + 1.6, 13, 1.1)                         # A <-> B colour key
     kx.imshow(np.linspace(0, 1, 64)[None], cmap=cmap, aspect="auto", extent=(0, 1, 0, 1)); kx.set_xticks([])
     kx.set_yticks([]); [sp_.set_linewidth(0.3) for sp_ in kx.spines.values()]
     kx.text(-0.04, 0.5, d["B"], transform=kx.transAxes, fontsize=FS - 0.5, ha="right", va="center", color=CB,
@@ -280,7 +286,7 @@ for i, k in enumerate(SYS):
 
     # ---- b (bottom): predicted expression A vs B, named genes
     pick, D = pair_genes(d, n=NG)
-    sx, sy, sw, shh = ex + 5, by + eh + 11.5, 18, 16
+    sx, sy, sw, shh = ex + 5, by + eh + 10.5, 21, 19
     sc = ax_mm(sx, sy, sw, shh)
     PA, PB = d["PGall"][d["ia"]], d["PGall"][d["ib"]]
     nm = d["named"] & (np.maximum(PA, PB) >= 0.02)
