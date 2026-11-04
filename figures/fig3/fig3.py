@@ -57,7 +57,7 @@ SHARED_GENES = ["hig", "kirre"]                         # panel c row 1: same ge
 COL = {"visual": "#0072B2", "cx": "#009E73", "motor": "#E69F00"}   # system colour = type A colour (Okabe-Ito)
 COLB = "#CC79A7"                                                    # type B colour (all systems)
 GREY = "#555555"                                                    # secondary text
-DOT_CMAP, MAP_CMAP = "RdBu", "viridis"                              # panel a dots / panel c neuron colours
+DOT_CMAP, MAP_CMAP = "RdBu_r", "viridis"                              # panel a dots / panel c neuron colours
 TITLE_A = "Predicted expression of inferred types"
 TITLE_B = "Sister types: assigned cells"
 TITLE_C = "Pseudo-spatial transcriptome on the connectome"
@@ -165,7 +165,7 @@ plt.rcParams.update({"font.family": "Liberation Sans", "font.size": 6, "axes.lin
                      "pdf.fonttype": 42, "svg.fonttype": "none", "legend.frameon": False})
 MM = 1 / 25.4
 TOPMM, ROWMM = 9, 64
-XB, XC = 69, 119                                                   # left edge of columns b and c, mm
+XB, XC = 71, 122                                                   # left edge of columns b and c, mm
 HL_LW = {"visual": 1.9, "cx": 1.9, "motor": 1.3}                     # panel c sister-type outline width
 HL_ALPHA = {"visual": 0.8, "cx": 0.8, "motor": 0.55}               # and opacity
 SHOW_ADDED_NOTE = False                                            # panel a note "X and Y added (not in the top 20)"
@@ -324,11 +324,11 @@ for i, k in enumerate(SYS):
     pts = segs.reshape(-1, 2)
     q_ = 0.5 if k == "motor" else 0.02
     lo_, hi_ = np.percentile(pts, q_, 0), np.percentile(pts, 100 - q_, 0)
-    mx, mw, mg, mh = XC, 25.0, 1.5, 17.0
+    mx, mw, mg, mh = XC, 23.0, 1.5, 17.0
     hm = min(mh, mw * (hi_[1] - lo_[1]) / (hi_[0] - lo_[0]))
     TG = 5.0
     blockh = 3 * hm + 2 * TG
-    top = y0 + 3.5 + (3 * mh + 2 * TG - blockh) / 2
+    top = y0 + 0.5 + (3 * mh + 2 * TG - blockh) / 2
     rows_ = [(list(SHARED_GENES), [(selA, CA), (selB, CB)], LABEL_C_ROW0, GREY),
              ([d["genes"][j] for j in pick], [(selA, CA)], d["A"], CA),
              ([d["genes"][j] for j in pick], [(selB, CB)], d["B"], CB)]
