@@ -60,17 +60,17 @@ GREY = "#555555"                                                    # secondary 
 DOT_CMAP, MAP_CMAP = "RdBu_r", "viridis"                              # panel a dots / panel c neuron colours
 TITLE_A = "Predicted expression of inferred types"
 TITLE_B = "Sister types: assigned cells"
-TITLE_C = "Pseudo-spatial transcriptome on the connectome"
-SUBTITLE_C = "every EM neuron receives its type's predicted expression"
+TITLE_C = "Pseudo-spatial transcriptome\non the connectome"
+SUBTITLE_C = "Every EM neuron receives its\ntype's predicted expression"
 LABEL_A_CBAR = "log$_2$ predicted expr. / 20-type mean"
-LABEL_B_SCATTER = "Predicted expression (named genes)"
+LABEL_B_SCATTER = "Predicted expression"
 LABEL_B_KEY = "cell pair assignment"
 LABEL_C_ROW0 = "Shared genes\nin all systems"
 LABEL_C_CBAR = "Predicted expression\n(fraction of cells detecting the gene)"
 EXTRA_NOTE = {}       # optional grey note under a system's panel-b statistics, e.g. {"motor": "top |Δ|: ribosomal /\n..."}
 ALSO = {}             # optional second pair reported (not drawn) under panel b, e.g. {"cx": ("PFNa", "PFNd")}
 WMM, HMM = 183, 202                                                 # figure size, mm
-FS, FT = 6, 7                                                       # base / title font size, pt
+FS, FT = 7, 8                                                       # base / title font size, pt
 OUTNAME = "fig3"
 # rules (as in the paper build)
 NTOP, MIN_CELLS, PG_MIN = 20, 20, 0.3   # top-20 inferred types with >= 20 soft cells; marker / pair genes P.G >= 0.3
@@ -181,14 +181,14 @@ def text_mm(x, y, s, **kw):
 
 
 def letter(x, y, s):
-    text_mm(x, y, s, fontsize=9, weight="bold", va="top", ha="left")
+    text_mm(x, y, s, fontsize=10, weight="bold", va="top", ha="left")
 
 
 fig = plt.figure(figsize=(WMM * MM, HMM * MM))
 text_mm(7, 2.2, TITLE_A, fontsize=FT, weight="bold", va="top")
 text_mm(XB, 2.2, TITLE_B, fontsize=FT, weight="bold", va="top")
 text_mm(XC, 2.2, TITLE_C, fontsize=FT, weight="bold", va="top")
-text_mm(XC, 5.0, SUBTITLE_C, fontsize=FS, color=GREY, va="top")
+text_mm(XC, 9.0, SUBTITLE_C, fontsize=FS - 0.5, color=GREY, va="top", linespacing=1.1)
 letter(2, 1.5, "a"); letter(XB - 5, 1.5, "b"); letter(XC - 5, 1.5, "c")
 
 for i, k in enumerate(SYS):
@@ -207,7 +207,7 @@ for i, k in enumerate(SYS):
         cols.append(next(j for j in np.argsort(-enr) if j not in cols and np.isfinite(enr[j])))
     M = d["PG"][:, cols]; M = np.log2((M + 1e-4) / (M.mean(0, keepdims=True) + 1e-4))
     lim = np.percentile(np.abs(M), 98)
-    hx, hy, hw, hhm = 20, y0 + 5, 36, 44
+    hx, hy, hw, hhm = 22, y0 + 5, 34, 44
     ax = ax_mm(hx, hy, hw, hhm)
     N = np.nan_to_num(d["n_expr"][np.ix_([d["crow"][t] for t in d["top"]], cols)])
     smax = max(N.max(), 1.0)
@@ -223,8 +223,8 @@ for i, k in enumerate(SYS):
                                                ms=np.sqrt(area(v)), mfc="#bbbbbb", mec="#555555", mew=0.15, ls="",
                                                transform=fig.transFigure))
     text_mm(hx + hw + 1.2, hy + 0.6, "cells", fontsize=FS - 0.5)
-    ax.set_yticks(range(len(rows_t)), rows_t, fontsize=FS)
-    ax.set_xticks(range(len(cols)), d["genes"][cols], rotation=90, fontsize=FS, style="italic")
+    ax.set_yticks(range(len(rows_t)), rows_t, fontsize=FS - 0.5)
+    ax.set_xticks(range(len(cols)), d["genes"][cols], rotation=90, fontsize=FS - 1, style="italic")
     ax.tick_params(length=1, pad=0.8)
     for sp_ in ax.spines.values(): sp_.set_visible(True)
     for r_, c_ in ((ra, CA), (rb, CB)):
@@ -268,10 +268,6 @@ for i, k in enumerate(SYS):
     ins.scatter(*xy[w >= 0.5 * w.max()].T, s=0.05, c="black", lw=0, rasterized=True)
     ins.add_patch(Rectangle(c0 - half, *(2 * half), fill=False, ec="black", lw=0.4))
     ins.set_aspect("equal", "datalim")
-    text_mm(ex + ew + 0.8, by + 13.6, "whole\nembedding", fontsize=FS - 1, color=GREY, va="top", linespacing=1.1)
-    mass_in = (w * inview).sum() / w.sum()
-    text_mm(ex + ew + 0.8, by + 18, f"{100 * mass_in:.0f}% of\nthe pair's\ncell mass\nin zoom", fontsize=FS - 1,
-            color=GREY, va="top", linespacing=1.1)
     text_mm(ex, by + eh + 0.5, f"{kind} (zoom)", fontsize=FS, color="#666666", va="top")
     kx = ax_mm(ex + 10.5, by + eh + 3.8, 13, 1.1)                         # A <-> B colour key
     kx.imshow(np.linspace(0, 1, 64)[None], cmap=cmap, aspect="auto", extent=(0, 1, 0, 1)); kx.set_xticks([])
