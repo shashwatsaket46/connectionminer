@@ -15,7 +15,7 @@ and they reproduce the figures pixel for pixel.
 |---|---|---|---|
 | Fig 1 | [`fig1/out/fig1.pdf`](fig1/out/fig1.pdf) | `fig1/fig1.py` | Data, model and held-out reconstruction for visual / central complex / motor |
 | Fig 2 | [`fig2/out/fig2.pdf`](fig2/out/fig2.pdf) | `fig2/fig2.py` | Nulls, connectome-only and gene-based baselines, label-mix recovery |
-| Fig 3 | [`fig3/out/fig3.pdf`](fig3/out/fig3.pdf) | `fig3/fig3.py` | Inferred P·G of sister type pairs (Dm8a/b, PEN_a/b, Fe10/Fe11) |
+| Fig 3 | [`fig3/out/fig3.pdf`](fig3/out/fig3.pdf) | `fig3/fig3.py` | Inferred P·G of sister type pairs (Dm8a/b, PFNa/d, LN393/LN432) |
 | Fig 4 | [`fig4/out/fig4.pdf`](fig4/out/fig4.pdf) | `fig4/fig4.py` | β gene-pair volcano, R²(k), gene-family × synaptic-edge heatmaps |
 | Fig S1 | [`figS1/out/figS1_preprocessing.pdf`](figS1/out/figS1_preprocessing.pdf) | `figS1/figS1.py` | Preprocessing per system; read depth of cells vs metacells |
 | Fig S (split) | [`fig2/out/figS_split.pdf`](fig2/out/figS_split.pdf) | `fig2/fig2.py` | Type-level 10-fold train/val/test split |

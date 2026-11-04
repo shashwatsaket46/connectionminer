@@ -13,8 +13,8 @@ Panels (183 x 214 mm, Nature Methods style):
   b  top: the pair's cells in the scRNA-seq embedding (zoom on their cluster, whole embedding inset), coloured by which
      of the two types a cell is assigned to; bottom: predicted expression of type A vs type B over the named genes,
      with the separation statistics
-  c  every EM neuron receives the predicted expression of its type: row 1 the same SHARED_GENES in all systems,
-     rows 2-3 the three genes that best tell the pair apart, type A (row 2) or type B (row 3) drawn on top, outlined
+  c  every EM neuron receives the predicted expression of its type: row 1 the same SHARED_GENES in all systems (2),
+     rows 2-3 the two genes that best tell the pair apart (top gene higher in each type), type A (row 2) or type B (row 3) drawn on top, outlined
 
 WHAT CAN BE CHANGED OFFLINE (see the constants below)
   * PAIRS: any two of the "offline types" of a system (python3 fig3.py --list prints them; data/pairs_<sys>.csv lists
@@ -51,9 +51,9 @@ DATA, FONTS, OUT = HERE / "data", HERE.parent / "fonts", HERE / "out"
 SYS = ["visual", "cx", "motor"]                                     # row order
 NAME = {"visual": "Visual", "cx": "Central complex", "motor": "Motor"}   # row labels (left margin)
 PAIRS = {"visual": ("Dm8a", "Dm8b"),                                # sister pair drawn per system: (type A, type B)
-         "cx": ("PEN_a/PEN1", "PEN_b/PEN2"),                        # must be offline types with skeletons (--list)
-         "motor": ("Fe10", "Fe11")}
-SHARED_GENES = ["hig", "kirre", "CanA-14F"]                         # panel c row 1: same genes in every system
+         "cx": ("PFNa", "PFNd"),                                    # must be offline types with skeletons (--list)
+         "motor": ("LN393", "LN432")}
+SHARED_GENES = ["hig", "kirre"]                         # panel c row 1: same genes in every system
 COL = {"visual": "#0072B2", "cx": "#009E73", "motor": "#E69F00"}   # system colour = type A colour (Okabe-Ito)
 COLB = "#CC79A7"                                                    # type B colour (all systems)
 GREY = "#555555"                                                    # secondary text
@@ -63,14 +63,14 @@ TITLE_B = "Sister types: assigned cells"
 TITLE_C = "Pseudo-spatial transcriptome on the connectome"
 SUBTITLE_C = "every EM neuron receives its type's predicted expression"
 LABEL_A_CBAR = "log$_2$ predicted expr. / 20-type mean"
-LABEL_B_SCATTER = "predicted expression, named genes"
-LABEL_B_KEY = "cell's share of the pair"
-LABEL_C_ROW0 = "same genes\nin all systems"
+LABEL_B_SCATTER = "Predicted expression (named genes)"
+LABEL_B_KEY = "cell pair assignment"
+LABEL_C_ROW0 = "Shared genes\nin all systems"
 LABEL_C_CBAR = "Predicted expression\n(fraction of cells detecting the gene)"
 EXTRA_NOTE = {}       # optional grey note under a system's panel-b statistics, e.g. {"motor": "top |Δ|: ribosomal /\n..."}
 ALSO = {}             # optional second pair reported (not drawn) under panel b, e.g. {"cx": ("PFNa", "PFNd")}
-WMM, HMM = 183, 214                                                 # figure size, mm
-FS, FT = 5, 6                                                       # base / title font size, pt
+WMM, HMM = 183, 202                                                 # figure size, mm
+FS, FT = 6, 7                                                       # base / title font size, pt
 OUTNAME = "fig3"
 # rules (as in the paper build)
 NTOP, MIN_CELLS, PG_MIN = 20, 20, 0.3   # top-20 inferred types with >= 20 soft cells; marker / pair genes P.G >= 0.3
@@ -95,6 +95,7 @@ def load(k):
     ia, ib = list(types).index(A), list(types).index(B)
     added = [i for i in (ia, ib) if i not in top]
     top = top[:NTOP - len(added)] + added                          # pair types always shown
+    top.remove(ib); top.insert(top.index(ia) + 1, ib)              # sister rows adjacent (B right below A)
     genes, PG = z["genes"].astype(str), z["PG"]
     sk_types = list(z["skel_types"].astype(str))
     for t in (A, B):
@@ -163,7 +164,12 @@ plt.rcParams.update({"font.family": "Liberation Sans", "font.size": 6, "axes.lin
                      "ytick.major.size": 1.5, "axes.spines.top": False, "axes.spines.right": False,
                      "pdf.fonttype": 42, "svg.fonttype": "none", "legend.frameon": False})
 MM = 1 / 25.4
-TOPMM, ROWMM = 9, 68
+TOPMM, ROWMM = 9, 64
+XB, XC = 69, 119                                                   # left edge of columns b and c, mm
+HL_LW = {"visual": 1.9, "cx": 1.9, "motor": 1.3}                     # panel c sister-type outline width
+HL_ALPHA = {"visual": 0.8, "cx": 0.8, "motor": 0.55}               # and opacity
+SHOW_ADDED_NOTE = False                                            # panel a note "X and Y added (not in the top 20)"
+NG = 2                                                              # genes (map columns) per row of panel c
 
 
 def ax_mm(x, y, w, h):
@@ -175,15 +181,15 @@ def text_mm(x, y, s, **kw):
 
 
 def letter(x, y, s):
-    text_mm(x, y, s, fontsize=8, weight="bold", va="top", ha="left")
+    text_mm(x, y, s, fontsize=9, weight="bold", va="top", ha="left")
 
 
 fig = plt.figure(figsize=(WMM * MM, HMM * MM))
-text_mm(21, 2.2, TITLE_A, fontsize=FT, weight="bold", va="top")
-text_mm(67, 2.2, TITLE_B, fontsize=FT, weight="bold", va="top")
-text_mm(106, 2.2, TITLE_C, fontsize=FT, weight="bold", va="top")
-text_mm(106, 5.0, SUBTITLE_C, fontsize=FS, color=GREY, va="top")
-letter(2, 1.5, "a"); letter(62, 1.5, "b"); letter(100, 1.5, "c")
+text_mm(7, 2.2, TITLE_A, fontsize=FT, weight="bold", va="top")
+text_mm(XB, 2.2, TITLE_B, fontsize=FT, weight="bold", va="top")
+text_mm(XC, 2.2, TITLE_C, fontsize=FT, weight="bold", va="top")
+text_mm(XC, 5.0, SUBTITLE_C, fontsize=FS, color=GREY, va="top")
+letter(2, 1.5, "a"); letter(XB - 5, 1.5, "b"); letter(XC - 5, 1.5, "c")
 
 for i, k in enumerate(SYS):
     d = load(k)
@@ -201,7 +207,7 @@ for i, k in enumerate(SYS):
         cols.append(next(j for j in np.argsort(-enr) if j not in cols and np.isfinite(enr[j])))
     M = d["PG"][:, cols]; M = np.log2((M + 1e-4) / (M.mean(0, keepdims=True) + 1e-4))
     lim = np.percentile(np.abs(M), 98)
-    hx, hy, hw, hhm = 21, y0 + 2, 34, 40
+    hx, hy, hw, hhm = 20, y0 + 5, 36, 44
     ax = ax_mm(hx, hy, hw, hhm)
     N = np.nan_to_num(d["n_expr"][np.ix_([d["crow"][t] for t in d["top"]], cols)])
     smax = max(N.max(), 1.0)
@@ -222,7 +228,7 @@ for i, k in enumerate(SYS):
     ax.tick_params(length=1, pad=0.8)
     for sp_ in ax.spines.values(): sp_.set_visible(True)
     for r_, c_ in ((ra, CA), (rb, CB)):
-        ax.add_patch(Rectangle((-0.5, r_ - 0.5), len(cols), 1, fill=False, ec=c_, lw=0.9, clip_on=False))
+        ax.add_patch(Rectangle((-0.5, r_ - 0.5), len(cols), 1, fill=False, ec=c_, lw=1.4, clip_on=False))
     for t in ax.get_yticklabels():
         if t.get_text() in (d["A"], d["B"]):
             t.set_color(CA if t.get_text() == d["A"] else CB); t.set_fontweight("bold")
@@ -233,21 +239,22 @@ for i, k in enumerate(SYS):
                       format="%.1f")
     cb.ax.tick_params(labelsize=FS, length=1, pad=0.6); cb.outline.set_linewidth(0.4)
     cb.set_label(LABEL_A_CBAR, fontsize=FS - 0.5, labelpad=1)
-    if d["added"]:
+    if d["added"] and SHOW_ADDED_NOTE:                                # stated in the caption instead
         text_mm(hx - 14, hy + hhm + 15.5, f"{' and '.join(d['added'])} added (not in the top 20)", fontsize=FS - 0.5,
                 color=GREY, va="top")
 
     # ---- b (top): embedding zoom, colour = share of A in the pair
+    by = y0 + 2                                                             # top of column b
     xy, kind = d["xy"], d["kind"]
     pa, pb = d["pA"], d["pB"]
     w = pa + pb; f = pa / np.maximum(w, 1e-12)
-    ex, ew, eh = 67, 23.5, 27
+    ex, ew, eh = XB, 30, 27
     core = xy[w >= 0.5 * w.max()]; med = np.median(core, 0); dist = np.abs(core - med).max(1)
     core = core[dist <= np.percentile(dist, 90) * 1.2]                       # the pair's main cluster
     lo, hi = core.min(0), core.max(0)
     c0, half = (lo + hi) / 2, (hi - lo).max() / 2 * 1.3
     half = np.array([half * ew / eh, half])
-    eb = ax_mm(ex, hy, ew, eh); eb.set_xticks([]); eb.set_yticks([])
+    eb = ax_mm(ex, by, ew, eh); eb.set_xticks([]); eb.set_yticks([])
     for sp_ in eb.spines.values(): sp_.set_visible(True); sp_.set_linewidth(0.4); sp_.set_color("#999999")
     inview = (np.abs(xy - c0) <= half * 1.05).all(1)
     eb.scatter(*xy[inview].T, s=0.6, c="#e3e3e3", lw=0, rasterized=True)
@@ -256,17 +263,17 @@ for i, k in enumerate(SYS):
     eb.scatter(*xy[sel][o].T, s=0.5 + 3.5 * (w[sel][o] / w.max()), c=f[sel][o], cmap=cmap, vmin=0, vmax=1, lw=0,
                rasterized=True)
     eb.set_xlim(c0[0] - half[0], c0[0] + half[0]); eb.set_ylim(c0[1] - half[1], c0[1] + half[1])
-    ins = ax_mm(ex + ew + 0.8, hy, 8, 8); ins.axis("off")                    # whole embedding, zoom box
+    ins = ax_mm(ex + ew + 0.8, by, 13, 13); ins.axis("off")                    # whole embedding, zoom box
     ins.scatter(*xy.T, s=0.02, c="#cfcfcf", lw=0, rasterized=True)
     ins.scatter(*xy[w >= 0.5 * w.max()].T, s=0.05, c="black", lw=0, rasterized=True)
     ins.add_patch(Rectangle(c0 - half, *(2 * half), fill=False, ec="black", lw=0.4))
     ins.set_aspect("equal", "datalim")
-    text_mm(ex + ew + 0.8, hy + 8.6, "whole\nembedding", fontsize=FS - 1, color=GREY, va="top", linespacing=1.1)
+    text_mm(ex + ew + 0.8, by + 13.6, "whole\nembedding", fontsize=FS - 1, color=GREY, va="top", linespacing=1.1)
     mass_in = (w * inview).sum() / w.sum()
-    text_mm(ex + ew + 0.8, hy + 13, f"{100 * mass_in:.0f}% of\nthe pair's\ncell mass\nin zoom", fontsize=FS - 1,
+    text_mm(ex + ew + 0.8, by + 18, f"{100 * mass_in:.0f}% of\nthe pair's\ncell mass\nin zoom", fontsize=FS - 1,
             color=GREY, va="top", linespacing=1.1)
-    text_mm(ex, hy + eh + 0.5, f"{kind} (zoom)", fontsize=FS, color="#666666", va="top")
-    kx = ax_mm(ex + 10.5, hy + eh + 3.2, 13, 1.1)                         # A <-> B colour key
+    text_mm(ex, by + eh + 0.5, f"{kind} (zoom)", fontsize=FS, color="#666666", va="top")
+    kx = ax_mm(ex + 10.5, by + eh + 3.8, 13, 1.1)                         # A <-> B colour key
     kx.imshow(np.linspace(0, 1, 64)[None], cmap=cmap, aspect="auto", extent=(0, 1, 0, 1)); kx.set_xticks([])
     kx.set_yticks([]); [sp_.set_linewidth(0.3) for sp_ in kx.spines.values()]
     kx.text(-0.04, 0.5, d["B"], transform=kx.transAxes, fontsize=FS - 0.5, ha="right", va="center", color=CB,
@@ -276,8 +283,8 @@ for i, k in enumerate(SYS):
     kx.text(0.5, -0.5, LABEL_B_KEY, transform=kx.transAxes, fontsize=FS - 1, ha="center", va="top", color=GREY)
 
     # ---- b (bottom): predicted expression A vs B, named genes
-    pick, D = pair_genes(d)
-    sx, sy, sw, shh = ex + 4, hy + eh + 9.0, 16, 16
+    pick, D = pair_genes(d, n=NG)
+    sx, sy, sw, shh = ex + 5, by + eh + 11.5, 18, 16
     sc = ax_mm(sx, sy, sw, shh)
     PA, PB = d["PGall"][d["ia"]], d["PGall"][d["ib"]]
     nm = d["named"] & (np.maximum(PA, PB) >= 0.02)
@@ -296,10 +303,9 @@ for i, k in enumerate(SYS):
     sc.tick_params(labelsize=FS - 0.5, length=1, pad=0.6)
     sc.set_xlabel(d["A"], fontsize=FS, color=CA, labelpad=0.5, weight="bold")
     sc.set_ylabel(d["B"], fontsize=FS, color=CB, labelpad=0.5, weight="bold")
-    sc.set_title(LABEL_B_SCATTER, fontsize=FS - 0.5, pad=1.5, color=GREY)
+    sc.set_title(LABEL_B_SCATTER, fontsize=FS - 0.5, pad=3.5, color=GREY)
     lines = [f"cells {s['cells'][0]:.0f} / {s['cells'][1]:.0f}", f"cell overlap {s['ovl']:.2f}",
-             f"max |Δ| {s['maxd']:.2f}", f"wiring r {s['conn_r']:.2f}",
-             (f"|Δ|≥0.05 higher in\n{d['A']}: {100 * s['upA']:.0f}%" if s['upA'] == s['upA'] else "no gene with |Δ|≥0.05")]
+             f"wiring r {s['conn_r']:.2f}"]
     text_mm(sx + sw + 1.0, sy + 0.3, "\n".join(lines), fontsize=FS - 0.5, va="top", linespacing=1.25)
     if k in ALSO:
         t = list(d["alltypes"]); s2 = stats(d, t.index(ALSO[k][0]), t.index(ALSO[k][1]))
@@ -318,9 +324,9 @@ for i, k in enumerate(SYS):
     pts = segs.reshape(-1, 2)
     q_ = 0.5 if k == "motor" else 0.02
     lo_, hi_ = np.percentile(pts, q_, 0), np.percentile(pts, 100 - q_, 0)
-    mx, mw, mg, mh = 106, 21.0, 0.9, 17.0
+    mx, mw, mg, mh = XC, 25.0, 1.5, 17.0
     hm = min(mh, mw * (hi_[1] - lo_[1]) / (hi_[0] - lo_[0]))
-    TG = 4.2
+    TG = 5.0
     blockh = 3 * hm + 2 * TG
     top = y0 + 3.5 + (3 * mh + 2 * TG - blockh) / 2
     rows_ = [(list(SHARED_GENES), [(selA, CA), (selB, CB)], LABEL_C_ROW0, GREY),
@@ -341,7 +347,8 @@ for i, k in enumerate(SYS):
             ma.add_collection(LineCollection(segs[o], array=sv[o], cmap=MAP_CMAP, norm=plt.Normalize(0, 1),
                                              linewidths=0.08, alpha=0.6, rasterized=True))
             for hsel, hc in hls:
-                ma.add_collection(LineCollection(segs[hsel], colors=hc, linewidths=0.75, rasterized=True))
+                ma.add_collection(LineCollection(segs[hsel], colors=hc, linewidths=HL_LW[k], alpha=HL_ALPHA[k],
+                                                 rasterized=True))
                 ma.add_collection(LineCollection(segs[hsel], array=np.full(hsel.sum(), v[stype[hsel][0]]),
                                                  cmap=MAP_CMAP, norm=plt.Normalize(0, 1), linewidths=0.3,
                                                  rasterized=True))
@@ -349,17 +356,13 @@ for i, k in enumerate(SYS):
             ma.set_aspect("equal", "box", anchor="S")
             if r_ == 0:
                 ma.set_title(G, fontsize=FS + 0.5, style="italic", pad=1)
-            elif r_ == 1:
-                ma.set_title(f"{G}", fontsize=FS + 0.5, style="italic", pad=1, loc="left")
-                ma.text(1.0, 1.0, f"{PA[gi]:.2f} vs {PB[gi]:.2f}", transform=ma.transAxes, fontsize=FS - 1,
-                        ha="right", va="bottom", color=GREY)
-            if i == 0 and g_ == 0 and r_ == 2:
-                ma.annotate("", (0.14, 0.0), (0.0, 0.0), "axes fraction", arrowprops=dict(arrowstyle="->", lw=0.4))
-                ma.annotate("", (0.0, -0.25), (0.0, 0.0), "axes fraction", arrowprops=dict(arrowstyle="->", lw=0.4))
-                ma.text(0.16, 0.0, "x", transform=ma.transAxes, fontsize=FS, va="center")
-                ma.text(0.03, -0.27, "z", transform=ma.transAxes, fontsize=FS, ha="left", va="top")
+            else:                                                          # this row's type: its P.G of the gene
+                if r_ == 1:
+                    ma.set_title(f"{G}", fontsize=FS + 0.5, style="italic", pad=1, loc="left")
+                ma.text(1.0, 1.0, f"{(PA if r_ == 1 else PB)[gi]:.2f}", transform=ma.transAxes, fontsize=FS - 0.5,
+                        ha="right", va="bottom", color=lc, weight="bold")
     cb_h = max(blockh * 0.8, 14)
-    cax = ax_mm(mx + 3 * (mw + mg) + 0.4, top + (blockh - cb_h) / 2, 1.2, cb_h)
+    cax = ax_mm(mx + NG * (mw + mg) + 0.4, top + (blockh - cb_h) / 2, 1.2, cb_h)
     cb = fig.colorbar(plt.cm.ScalarMappable(plt.Normalize(0, 1), MAP_CMAP), cax=cax, ticks=[0, 0.5, 1])
     cb.ax.tick_params(labelsize=FS, length=1, pad=0.6); cb.outline.set_linewidth(0.4)
     cb.set_label(LABEL_C_CBAR, fontsize=FS - 0.5, labelpad=1.5)
