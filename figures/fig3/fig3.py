@@ -263,11 +263,13 @@ for i, k in enumerate(SYS):
     eb.scatter(*xy[sel][o].T, s=0.5 + 3.5 * (w[sel][o] / w.max()), c=f[sel][o], cmap=cmap, vmin=0, vmax=1, lw=0,
                rasterized=True)
     eb.set_xlim(c0[0] - half[0], c0[0] + half[0]); eb.set_ylim(c0[1] - half[1], c0[1] + half[1])
-    ins = ax_mm(ex + ew + 0.8, by, 13, 13); ins.axis("off")                    # whole embedding, zoom box
+    ins = ax_mm(ex + ew + 0.8, by, 13, 13); ins.set_xticks([]); ins.set_yticks([])   # whole embedding, zoom box
+    for sp_ in ins.spines.values(): sp_.set_visible(True); sp_.set_linewidth(0.3); sp_.set_color("#cccccc")
     ins.scatter(*xy.T, s=0.02, c="#cfcfcf", lw=0, rasterized=True)
     ins.scatter(*xy[w >= 0.5 * w.max()].T, s=0.05, c="black", lw=0, rasterized=True)
     ins.add_patch(Rectangle(c0 - half, *(2 * half), fill=False, ec="black", lw=0.4))
     ins.set_aspect("equal", "datalim")
+    text_mm(ex + ew + 0.8, by + 13.6, "whole\nembedding", fontsize=FS - 1, color=GREY, va="top", linespacing=1.1)
     pts = (xy[inview] - (c0 - half)) / (2 * half)                       # embedding label in the emptiest corner
     corners = [(0.03, 0.03, "left", "bottom"), (0.97, 0.03, "right", "bottom"), (0.03, 0.97, "left", "top"),
                (0.97, 0.97, "right", "top")]
