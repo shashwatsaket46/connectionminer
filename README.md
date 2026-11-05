@@ -16,9 +16,9 @@ C  ≈  Ĉ  =  P · G · β · Gᵀ · Pᵀ        G = metacell × gene detectio
 This repository runs the best model for each of three systems, using the
 held-out-type protocol from the paper:
 
-| dataset | system | cells | types | metacells | solver genes | test r (paper Fig 1) |
+| dataset | system | cells | types | metacells | solver genes | test r (paper) |
 |---|---|---:|---:|---:|---:|---:|
-| `visual` | adult optic lobe | 99,656 | 741 | 4,748 | ≤3,000 | **0.601** |
+| `visual` | adult optic lobe | 99,656 | 741 | 4,748 | ≤3,000 | **0.65** (0.601 with the default config, see below) |
 | `motor`  | adult VNC premotor + motor neurons | 11,292 | 730 | 2,036 | 1,000 (+ complements) | **0.375** |
 | `cx`     | central complex | 48,014 | 853 | 2,490 | 2,000 | **0.815** |
 
@@ -41,7 +41,7 @@ Every fold is run with 5 solver seeds. The figure numbers are means over the
 ## Install
 
 ```bash
-git clone https://github.com/neuroinfolab/connectionminer.git
+git clone https://github.com/shashwatsaket46/connectionminer.git
 cd connectionminer
 conda env create -f environment.yml
 conda activate connectionminer
@@ -62,8 +62,7 @@ the solver runs on CPU automatically, just more slowly.
 | `connectionminer_data_motor.tar.xz` | 1.1 MB |
 | `connectionminer_data_cx.tar.xz` | 3.9 MB |
 
-On the NYU HPC cluster the archives are in `/scratch/ss20308/connectionminer/dist/`.
-Everyone else: ask the authors. Unpack them into `data/` and check them
+The archives are available from the authors on request (ss20308@nyu.edu). Unpack them into `data/` and check them
 against `DATA_SHA256SUMS`:
 
 ```bash
@@ -101,8 +100,14 @@ python -m connectionminer summarize visual
 
 - Config: `configs/visual.yaml`.
 - The bundle carries the 3,000 dispersion-binned HVGs. On each train block the
-  solver keeps the genes detected in at least one train cell, ordered by
-  detection variance. Val and test reuse train's genes.
+  solver keeps the genes detected in at least `genes.min_cells` train cells,
+  ordered by detection variance. Val and test reuse train's genes.
+- **Paper model.** The paper's visual results (test r = 0.65) use
+  `min_cells: 5`, which drops genes detected in fewer than 5 train cells. The
+  config ships with `min_cells: 1` (test r = 0.601), the model used for the
+  paper's null-shuffle and gene-pair (β) analyses. To reproduce the main
+  visual result, set `min_cells: 5` in `configs/visual.yaml`; nothing else
+  changes.
 - About 25 min per seed per fold on a shared A100/H200 (train ≈ 12 s/iteration).
   Use a GPU: on CPU this dataset takes hours per seed.
 
