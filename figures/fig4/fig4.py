@@ -8,13 +8,13 @@ with Arial). Runs from any working directory. Dependencies: numpy, scipy, matplo
 a  Volcano per system: every TESTED directed gene pair. x = 10-fold mean log2(1+beta) - log2(1+beta_null)
    (real solves vs refit null), y = -log10 paired-t P over the folds. Significant = Benjamini-Hochberg FDR over all
    tested pairs of the system. Pairs whose two genes both belong to a gene family are coloured by family class.
-   Combined = Fisher's method on one-sided P over the systems holding both genes (named genes, >= 2 systems).
+   (The cross-system Fisher combination is reported in the Results text only, not drawn.)
 b  R^2(k): squared Pearson r between C and C_hat restricted to the global top-k gene pairs of each train solve;
    median and IQR over 50 train solves; dashed = the full model.
 c  Share of C_hat per family gene pair (columns) on synaptic type pairs (rows). Columns = the best-share supported
    pair (volcano x > 0, P < SUPPORT_P) of every family class, then the remaining supported pairs by mean share,
    filled up by share. Rows = top total share, at most ROWS_PER_COLUMN per dominant column; rows and columns
-   biclustered (cosine, average linkage, optimal leaf order). Colour strip = family class; marks = volcano evidence.
+   biclustered (cosine, average linkage, optimal leaf order). Colour strip = family class (legend shared with a).
 
 Everything you are likely to want to edit is in the CONSTANTS block below.
 """
@@ -60,15 +60,17 @@ N_COLUMNS = 20             # heatmap gene-pair columns per system (max: visual 2
 N_ROWS = 20                # heatmap synaptic-type-pair rows per system
 ROWS_PER_COLUMN = 4        # at most this many rows may have the same dominant column
 
-# --- systems: (data key, panel title, title colour, volcano subtitle) ------------------------------------------
+# --- systems: (data key, panel title, title colour) -------------------------------------------------------------
 SYSTEMS = [
-    ("visual", "Visual system", "#3B5BA9", "{g:,} solver genes"),
-    ("motor", "Motor system", "#D9822B", "{h:,} genes + {h:,} complements"),
-    ("cx", "Central complex", "#3E9A57", "{g:,} genes (CX reference build)"),
+    ("visual", "Visual system", "#3B5BA9"),
+    ("motor", "Motor system", "#D9822B"),
+    ("cx", "Central complex", "#3E9A57"),
 ]
-FISHER_TITLE = "Combined (Fisher)"
-FISHER_COLOUR = "#333333"
-FISHER_SUBTITLE = "named genes in ≥ 2 systems\n{n:,} pairs"
+
+# --- font sizes (pt); 6 pt is the smallest size used, as in Fig 3 -------------------------------------------------
+FS_MIN, FS, FS_TITLE, FS_LETTER = 6, 6.5, 8, 10
+FS_LEGEND = 7.5            # family-class legend under panel a (also the key for the colour strips in c)
+FS_GENE = 7                # gene-pair call-outs in the volcanoes
 
 # --- family classes: colour and legend name ---------------------------------------------------------------------
 FAMILY_COLOURS = {"TF–TF": "#7B3294", "CAM–CAM": "#1B9E77", "NP–NPR": "#E7298A", "cross": "#E6AB02"}
@@ -83,20 +85,14 @@ HEAT_GAMMA, HEAT_MAX = 0.5, 80     # colour scale: PowerNorm(gamma, 0, max %) ; 
 HEAT_TICKS = [0, 5, 20, 40, 80]
 
 # --- titles / axis labels ---------------------------------------------------------------------------------------
-VOLCANO_YLABEL = r"$-\log_{10}$ $P$ (paired t, 10 folds)"
-VOLCANO_XLABEL = (r"$\beta$ effect: 10-fold mean $\log_2(1+\beta) - \log_2(1+\beta_{\mathrm{null}})$, "
-                  "every tested pair")
+VOLCANO_YLABEL = r"$-\log_{10}$ $P$"
+VOLCANO_XLABEL = r"$\beta$ effect, $\log_2(1+\beta) - \log_2(1+\beta_{\mathrm{null}})$"
 R2_TITLE = r"Variance of $C$ explained"
-R2_SUBTITLE = "median and IQR over 50 train solves"
-R2_XLABEL = "Top-k gene pairs (global, per solve)"
-R2_YLABEL = r"Variance of $C$ explained, $R^2$ (train)"
+R2_XLABEL = "Top-k gene pairs"
+R2_YLABEL = r"$R^2$ (train)"
 R2_YMAX = 0.56
 HEAT_YLABEL = "Synaptic type pair (pre → post)"
-HEAT_BAR_LABEL = r"mean share of $\hat{C}$" + "\nover synaptic\ntype pairs (%)"
 HEAT_CBAR_LABEL = r"Share of $\hat{C}$ (%)"
-HEAT_FOOTER = ("Family gene pair (presynaptic-type gene–postsynaptic-type gene)   ·   marks: * BH q < {fdr:g}   "
-               "● volcano x > 0, P < {sp:g}   ○ tested, not supported   – not tested in the volcano build")
-FAMILY_LEGEND_TITLE = "Family class (colour strip)"
 
 # --- fonts / output ---------------------------------------------------------------------------------------------
 FONT_FAMILY = "Liberation Sans"    # bundled in ../fonts; put "Arial" first in style() if you prefer Arial
@@ -108,6 +104,9 @@ ANON = re.compile(r"\d{4,}|^(CG|CR)\d|:CR\d|^FBti|^~")
 # ================================================================================================================
 
 MM = 1 / 25.4
+# panel c layout (mm): heatmap width and left edges (room for each system's row labels)
+HEAT_W = 35
+HEAT_X0 = [27, 80, 144]
 
 
 def style():
@@ -115,8 +114,8 @@ def style():
         fm.fontManager.addfont(str(f))
     plt.rcParams.update({
         "font.family": "sans-serif", "font.sans-serif": [FONT_FAMILY, "Arial", "DejaVu Sans"],
-        "font.size": 6, "axes.titlesize": 7, "axes.labelsize": 6, "xtick.labelsize": 5.5, "ytick.labelsize": 5.5,
-        "legend.fontsize": 5.5, "axes.linewidth": 0.5, "xtick.major.width": 0.5, "ytick.major.width": 0.5,
+        "font.size": FS, "axes.titlesize": FS_TITLE, "axes.labelsize": FS, "xtick.labelsize": FS_MIN,
+        "ytick.labelsize": FS_MIN, "legend.fontsize": FS, "axes.linewidth": 0.5, "xtick.major.width": 0.5, "ytick.major.width": 0.5,
         "xtick.major.size": 2, "ytick.major.size": 2, "xtick.major.pad": 1.5, "ytick.major.pad": 1.5,
         "axes.spines.top": False, "axes.spines.right": False, "legend.frameon": False, "axes.labelpad": 2,
         "pdf.fonttype": 42, "ps.fonttype": 42, "svg.fonttype": "none", "mathtext.fontset": "custom",
@@ -136,10 +135,10 @@ def bh(p):
     return out
 
 
-def letter(fig, ax, s, dx=-6, dy=1.5):
-    bb = ax.get_position()
-    fig.text(bb.x0 + dx * MM / fig.get_figwidth(), bb.y1 + dy * MM / fig.get_figheight(), s,
-             fontsize=8, fontweight="bold", va="bottom", ha="left")
+def letter(fig, x, y, s):
+    """Panel letter with its top-left corner at (x, y) mm from the figure's top-left corner."""
+    fig.text(x * MM / fig.get_figwidth(), 1 - y * MM / fig.get_figheight(), s,
+             fontsize=FS_LETTER, fontweight="bold", va="top", ha="left")
 
 
 def leaf_order(X):
@@ -170,7 +169,7 @@ def icons():
 
 
 # ------------------------------------------------------------------------------------------------------ panel a
-def volcano(ax, key, name, col, subtitle):
+def volcano(ax, key, name, col):
     meta = json.loads((DATA / f"volcano_{key}_meta.json").read_text())
     d = pd.read_csv(DATA / f"volcano_{key}.csv.gz", keep_default_na=False)
     cls = d.family_class.to_numpy(str)
@@ -184,7 +183,7 @@ def volcano(ax, key, name, col, subtitle):
         m = (cls == c) & ~sig
         ax.scatter(x[m], y[m], s=2.5, c=cc, lw=0, alpha=0.85, rasterized=True, zorder=2)
     fc = [FAMILY_COLOURS[c] if c else col for c in cls[sig]]
-    ax.scatter(x[sig], y[sig], s=9, c=fc, lw=0.35, edgecolors="black", zorder=4)
+    ax.scatter(x[sig], y[sig], s=11, c=fc, lw=0.4, edgecolors="black", zorder=4)
     nsig = int(sig.sum())
     thr = -np.log10(p[sig].max()) if nsig else -np.log10(FDR / len(d))   # none pass: BH's first step FDR / m
     ax.axhline(thr, ls=(0, (1.5, 1.5)), lw=0.5, c="#555555", zorder=0)
@@ -192,15 +191,12 @@ def volcano(ax, key, name, col, subtitle):
     ok = d.named.to_numpy(bool)
     sel = np.flatnonzero(ok & (x > 0) & (p < LABEL_MAX_P))
     for k, t in enumerate(sel[np.argsort(-y[sel])][:N_LABELS]):
-        ax.annotate(f"{d.gene_i.iloc[t]}–{d.gene_j.iloc[t]}", (x[t], y[t]), (0.04, 0.62 - 0.085 * k),
-                    textcoords="axes fraction", fontsize=5, style="italic", va="center", color="#222222",
+        ax.annotate(f"{d.gene_i.iloc[t]}–{d.gene_j.iloc[t]}", (x[t], y[t]), (0.03, 0.6 - 0.12 * k),
+                    textcoords="axes fraction", fontsize=FS_GENE, style="italic", va="center", color="#222222",
                     arrowprops=dict(arrowstyle="-", lw=0.3, color="#9a9a9a", shrinkA=1, shrinkB=1.5))
     ax.set_ylim(-0.2, max(y.max(), thr) * 1.08)
-    ax.set_title(name, color=col, fontsize=7, weight="bold", loc="left", pad=13)
-    g = meta["n_genes"]
-    ax.text(0, 1.015, f"{subtitle.format(g=g, h=g // 2)}\n{meta['tested']:,} pairs tested", transform=ax.transAxes,
-            fontsize=4.8, color=DARK, va="bottom", linespacing=1.15)
-    ax.text(0.98, 0.04, f"{nsig} significant", transform=ax.transAxes, ha="right", fontsize=5.5, color=col)
+    ax.set_title(name, color=col, fontsize=FS_TITLE, weight="bold", loc="left", pad=3)
+    ax.text(0.98, 0.04, f"{nsig} significant", transform=ax.transAxes, ha="right", fontsize=FS, color=col)
     up, dn = int((sig & (x > 0)).sum()), int((sig & (x < 0)).sum())
     if FDR == 0.05:                       # cross-check against the counts of the source build
         assert (up, dn) == (meta["bh_q05_up"], meta["bh_q05_down"]), (key, up, dn, meta)
@@ -208,34 +204,9 @@ def volcano(ax, key, name, col, subtitle):
           f"family among significant: {list(zip(d.gene_i[sig], d.gene_j[sig], cls[sig]))}")
 
 
-def fisher_panel(ax):
-    c = pd.read_csv(DATA / "fisher_combined.csv.gz", keep_default_na=False)
-    p = c.p.to_numpy(float)
-    x = c.effect.to_numpy(float)
-    y = -np.log10(p)
-    sig = bh(p) < FDR
-    ax.scatter(x[~sig], y[~sig], s=1.5, c=OTHER_PAIR_COLOUR, lw=0, rasterized=True)
-    ax.scatter(x[sig], y[sig], s=7, c=FISHER_COLOUR, lw=0.25, edgecolors="black", zorder=3)
-    nsig = int(sig.sum())
-    thr = -np.log10(p[sig].max()) if nsig else -np.log10(FDR / len(c))
-    ax.axhline(thr, ls=(0, (1.5, 1.5)), lw=0.5, c="#555555", zorder=1)
-    ax.axvline(0, c="#e0e0e0", lw=0.5, zorder=0)
-    top = c[(x > 0) & (p < LABEL_MAX_P)].nsmallest(N_LABELS, "p")
-    for k, (_, r) in enumerate(top.iterrows()):
-        ax.annotate(f"{r.gene_i}–{r.gene_j}", (r.effect, -np.log10(r.p)), (0.04, 0.82 - 0.09 * k),
-                    textcoords="axes fraction", fontsize=5, style="italic", va="center", color="#222222",
-                    arrowprops=dict(arrowstyle="-", lw=0.3, color="#9a9a9a", shrinkA=1, shrinkB=1.5))
-    ax.set_ylim(-0.2, max(y.max(), thr) * 1.08)
-    ax.text(0.98, 0.04, f"{nsig} significant", transform=ax.transAxes, ha="right", fontsize=5.5, color=FISHER_COLOUR)
-    ax.set_title(FISHER_TITLE, color=FISHER_COLOUR, fontsize=7, weight="bold", loc="left", pad=13)
-    ax.text(0, 1.015, FISHER_SUBTITLE.format(n=len(c)), transform=ax.transAxes, fontsize=4.8, color=DARK,
-            va="bottom", linespacing=1.15)
-    print(f"fisher: {len(c):,} pairs, {nsig} BH-significant")
-
-
 # ------------------------------------------------------------------------------------------------------ panel b
 def r2_panel(ax):
-    for key, name, col, _ in SYSTEMS:
+    for key, name, col in SYSTEMS:
         z = np.load(DATA / f"r2k_{key}.npz")
         k, r2, full = z["k"], z["r2"], z["r2_full"]
         lo, med, hi = np.percentile(r2, [25, 50, 75], axis=0)
@@ -253,9 +224,9 @@ def r2_panel(ax):
     h, l = ax.get_legend_handles_labels()
     h.append(Line2D([], [], color="#555555", lw=0.6, ls=(0, (2.5, 1.5))))
     l.append("Full model")
-    ax.legend(h, l, loc="center left", bbox_to_anchor=(0.0, 0.52), handlelength=1.4, fontsize=5.2, borderaxespad=0.2)
-    ax.set_title(R2_TITLE, loc="left", fontsize=7, fontweight="bold", pad=13)
-    ax.text(0, 1.015, R2_SUBTITLE, transform=ax.transAxes, fontsize=4.8, color=DARK, va="bottom")
+    ax.legend(h, l, loc="upper left", bbox_to_anchor=(0.0, 0.8), handlelength=1.4, fontsize=FS, borderaxespad=0.2,
+              labelspacing=0.3)
+    ax.set_title(R2_TITLE, loc="left", fontsize=FS_TITLE, fontweight="bold", pad=3)
 
 
 # ------------------------------------------------------------------------------------------------------ panel c
@@ -282,7 +253,7 @@ def pick_columns(d):
     return np.array(cols), cls, sup
 
 
-def heat(ax, bar, strip, key, name, col, first, cax):
+def heat(ax, strip, key, name, col, first, cax):
     d = dict(np.load(DATA / f"heat_{key}.npz"))
     cols, cls, sup = pick_columns(d)
     share = d["share"][:, cols]
@@ -301,47 +272,22 @@ def heat(ax, bar, strip, key, name, col, first, cax):
     M = share[np.ix_(rows, co)] * 100
     im = ax.imshow(M, aspect="auto", cmap=HEAT_CMAP, norm=PowerNorm(HEAT_GAMMA, 0, HEAT_MAX), interpolation="nearest")
     ax.set_yticks(range(len(rows)))
-    ax.set_yticklabels([f"{d['row_pre'][r]} → {d['row_post'][r]}" for r in rows], fontsize=4.8)
+    ax.set_yticklabels([f"{d['row_pre'][r]}\u2009→\u2009{d['row_post'][r]}" for r in rows], fontsize=FS_MIN)
     ax.set_xticks(range(nc))
-    ax.set_xticklabels([f"{d['col_pre'][j]}–{d['col_post'][j]}" for j in cj], rotation=90, fontsize=5, style="italic")
+    ax.set_xticklabels([f"{d['col_pre'][j]}–{d['col_post'][j]}" for j in cj], rotation=90, fontsize=FS_MIN,
+                       style="italic")
     ax.tick_params(length=0, pad=1)
     for s in ax.spines.values():
         s.set_visible(False)
     if first:
-        ax.set_ylabel(HEAT_YLABEL)
+        ax.set_ylabel(HEAT_YLABEL, fontsize=FS)
     strip.imshow([[to_rgb(FAMILY_COLOURS[cls[j]]) for j in cj]], aspect="auto", interpolation="nearest")
     strip.set_axis_off()
-    ms = d["col_mean_share"][cj] * 100
-    bar.bar(range(nc), ms, width=0.78, color=BAR_COLOUR, lw=0)
-    bar.set_xlim(-0.5, nc - 0.5)
-    bar.set_xticks([])
-    bar.spines["bottom"].set_visible(False)
-    top = ms.max() * 1.45
-    bar.set_ylim(0, top)
-    bar.set_yticks([0, float(f"{ms.max():.2g}")])
-    bar.yaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:g}"))
-    for k, j in enumerate(cj):
-        q, p = d["col_vq"][j], d["col_vp"][j]
-        yk = ms[k] + top * 0.09
-        if q < FDR:
-            bar.scatter([k], [yk], s=9, marker="*", c=DARK, lw=0, clip_on=False)
-        elif sup[j]:
-            bar.scatter([k], [yk], s=3, marker="o", c=DARK, lw=0, clip_on=False)
-        elif np.isfinite(p):
-            bar.scatter([k], [yk], s=3, marker="o", facecolors="white", edgecolors=DARK, lw=0.35, clip_on=False)
-        else:
-            bar.plot([k - 0.25, k + 0.25], [yk, yk], c=DARK, lw=0.4, clip_on=False)
-    if first:
-        bar.text(-0.2, 0.5, HEAT_BAR_LABEL, transform=bar.transAxes, ha="right", va="center", fontsize=5,
-                 linespacing=1.1)
-    bar.set_title(name, loc="left", fontsize=7, fontweight="bold", pad=15, color=col)
-    bar.text(0, 1.04, f"{int(d['n_fam_genes'])} family genes · {int(d['n_fam_pairs']):,} family pairs\n"
-                      f"{float(d['fam_total_share']):.1%} of $\\hat{{C}}$ · {int(d['n_fam_up'])} up in volcano (P < 0.05)",
-             transform=bar.transAxes, fontsize=5, color=DARK, va="bottom", linespacing=1.1)
+    strip.set_title(name, loc="left", fontsize=FS_TITLE, fontweight="bold", pad=2.5, color=col)
     if cax is not None:
-        cb = plt.colorbar(im, cax=cax, orientation="vertical", ticks=HEAT_TICKS)
-        cb.set_label(HEAT_CBAR_LABEL, fontsize=5.5, labelpad=2)
-        cb.ax.tick_params(labelsize=5, length=1.5, width=0.4)
+        cb = plt.colorbar(im, cax=cax, orientation="horizontal", ticks=HEAT_TICKS)
+        cax.set_title(HEAT_CBAR_LABEL, fontsize=FS, pad=2)
+        cb.ax.tick_params(labelsize=FS_MIN, length=1.5, width=0.4, pad=1)
         cb.outline.set_linewidth(0.4)
 
 
@@ -349,56 +295,53 @@ def heat(ax, bar, strip, key, name, col, first, cax):
 def main():
     style()
     W = FIG_WIDTH_MM
-    vy, vh = 13, 36                                    # all positions in mm from the top-left corner
-    hy, bh, sh, hh = vy + vh + 30, 8, 1.6, 35
-    H = hy + bh + 1 + sh + 0.6 + hh + 27
+    vy, vh = 6, 34                                     # all positions in mm from the top-left corner
+    hy, sh, hh = vy + vh + 24, 1.8, 44                 # heatmap block: colour strip, then the heatmap
+    H = hy + sh + 0.6 + hh + 20
     fig = plt.figure(figsize=(W * MM, H * MM))
 
     def box(x, y, w, h):
         return fig.add_axes([x / W, 1 - (y + h) / H, w / W, h / H])
 
-    vx0, vw, vsp = 11, 24, 7
-    vaxes = [box(vx0 + k * (vw + vsp), vy, vw, vh) for k in range(4)]
-    for ax, (key, name, col, sub) in zip(vaxes, SYSTEMS):
-        volcano(ax, key, name, col, sub)
-    fisher_panel(vaxes[3])
+    # ---- a: volcanoes
+    vx0, vw, vsp = 12, 31, 8
+    vaxes = [box(vx0 + k * (vw + vsp), vy, vw, vh) for k in range(3)]
+    for ax, (key, name, col) in zip(vaxes, SYSTEMS):
+        volcano(ax, key, name, col)
     vaxes[0].set_ylabel(VOLCANO_YLABEL)
-    fig.text((vx0 + 2 * vw + 1.5 * vsp) / W, 1 - (vy + vh + 5) / H, VOLCANO_XLABEL, ha="center", va="top", fontsize=6)
-    hand = [Line2D([], [], ls="", marker="o", ms=2, c=OTHER_PAIR_COLOUR)] + \
-           [Line2D([], [], ls="", marker="o", ms=2.4, c=c) for c in FAMILY_COLOURS.values()] + \
-           [Line2D([], [], ls="", marker="o", ms=3, mfc="white", mec="black", mew=0.4),
-            Line2D([], [], ls=(0, (1.5, 1.5)), lw=0.6, c="#555555")]
-    labs = ["Other pair"] + [FAMILY_NAMES[c] for c in FAMILY_COLOURS] + \
-           [f"BH FDR {FDR * 100:g} % (black edge)", "BH threshold"]
-    fig.legend(hand, labs, loc="upper center", bbox_to_anchor=((vx0 + 2 * vw + 1.5 * vsp) / W, 1 - (vy + vh + 9.5) / H),
-               ncol=7, fontsize=5.2, handletextpad=0.3, columnspacing=1.0, frameon=False)
-    letter(fig, vaxes[0], "a", dx=-11, dy=7)
+    vmid = vx0 + 1.5 * vw + vsp
+    fig.text(vmid / W, 1 - (vy + vh + 5.5) / H, VOLCANO_XLABEL, ha="center", va="top", fontsize=FS)
+    hand = [Line2D([], [], ls="", marker="o", ms=3, c=OTHER_PAIR_COLOUR)] + \
+           [Line2D([], [], ls="", marker="s", ms=5, c=c) for c in FAMILY_COLOURS.values()] + \
+           [Line2D([], [], ls="", marker="o", ms=4, mfc="white", mec="black", mew=0.5),
+            Line2D([], [], ls=(0, (1.5, 1.5)), lw=0.7, c="#555555")]
+    labs = ["Other pair"] + [FAMILY_NAMES[c] for c in FAMILY_COLOURS] + [f"FDR < {FDR * 100:g}%", "FDR threshold"]
+    fig.legend(hand, labs, loc="upper left", bbox_to_anchor=(2 / W, 1 - (vy + vh + 10) / H),
+               ncol=7, fontsize=FS_LEGEND, handletextpad=0.25, columnspacing=1.1, frameon=False, handlelength=1.2)
+    letter(fig, 0.5, 0.5, "a")
 
-    cx = vx0 + 4 * vw + 3 * vsp + 14
-    axb = box(cx, vy, W - 2 - cx, vh)
+    # ---- b: R^2(k)
+    bx = vx0 + 3 * vw + 2 * vsp + 13
+    axb = box(bx, vy, W - 2 - bx, vh)
     r2_panel(axb)
-    letter(fig, axb, "b", dx=-11, dy=7)
+    letter(fig, bx - 12, 0.5, "b")
 
-    hw, hx0, hsp = 35, 21, 21
+    # ---- c: heatmaps
+    hw, hx0 = HEAT_W, HEAT_X0
     ims = icons()
-    for k, (key, name, col, _) in enumerate(SYSTEMS):
-        x = hx0 + k * (hw + hsp)
-        bar = box(x, hy, hw, bh)
-        strip = box(x, hy + bh + 0.5, hw, sh)
-        ax = box(x, hy + bh + 0.5 + sh + 0.6, hw, hh)
-        cax = box(x + hw + 1.5, hy + bh + 1 + hh * 0.3, 1.6, hh * 0.4) if k == len(SYSTEMS) - 1 else None
-        heat(ax, bar, strip, key, name, col, k == 0, cax)
+    for k, (key, name, col) in enumerate(SYSTEMS):
+        x = hx0[k]
+        strip = box(x, hy, hw, sh)
+        ax = box(x, hy + sh + 0.6, hw, hh)
+        cax = box(W - 22, vy + vh + 13, 18, 1.6) if k == len(SYSTEMS) - 1 else None   # in the legend row of a
+        heat(ax, strip, key, name, col, k == 0, cax)
         img = ims[k]
-        ih = 12
-        ia = box(x + hw + 0.8, hy - 4, ih * img.shape[1] / img.shape[0], ih)
+        ih = 9
+        iw = ih * img.shape[1] / img.shape[0]
+        ia = box(x - iw - 1.5, hy - ih + sh + 0.4, iw, ih)
         ia.imshow(img, interpolation="lanczos")
         ia.set_axis_off()
-        if k == 0:
-            letter(fig, bar, "c", dx=-21, dy=8)
-    fig.text(0.5, 1 - (H - 1.5) / H, HEAT_FOOTER.format(fdr=FDR, sp=SUPPORT_P), ha="center", va="bottom", fontsize=5.5)
-    fig.legend([Patch(color=c) for c in FAMILY_COLOURS.values()], [FAMILY_NAMES[c] for c in FAMILY_COLOURS],
-               loc="lower center", bbox_to_anchor=(0.5, 1 - (hy - 7.5) / H), ncol=4, fontsize=5.2, frameon=False,
-               handlelength=1.2, title=FAMILY_LEGEND_TITLE, title_fontsize=5.2)
+    letter(fig, 0.5, hy - 6, "c")
 
     OUT.mkdir(exist_ok=True)
     fig.savefig(OUT / "fig4.png", dpi=PNG_DPI)
